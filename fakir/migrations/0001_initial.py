@@ -16,8 +16,7 @@ class Migration(migrations.Migration):
             name='Zakup',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nazwa_produktu', models.CharField(default='', max_length=100)),
-                ('rodzaj_zaplaty', models.BooleanField(choices=[(0, 'ratalny'), (1, 'jednorazowy')], default='')),
+                ('rodzaj_zaplaty', models.BooleanField()),
             ],
         ),
         migrations.CreateModel(

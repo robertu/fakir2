@@ -10,3 +10,4 @@ flake8
 pylint
 autopep8
 psycopg2
+social-auth-app-django
