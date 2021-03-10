@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'fakir/style.css' %}">
+<title>login page</title>
+</head>
+<body>
+{% if user.is_authenticated %}
+    <p>Welcome {{ user.username }}</p>
+{% else %}
+	<h1>Log in</h1>
+	<form class="site-form" action="{% url 'index'%}"method="post">
+		{% csrf_token %}
+		{{form}}
+		<input type="submit" value="Login">
+{% endif %}
+</body>
+</html
