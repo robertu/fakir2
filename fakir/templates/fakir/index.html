@@ -10,12 +10,16 @@
 <body>
 {% if user.is_authenticated %}
     <p>Welcome {{ user.username }}</p>
+    <a class="" href="{% url 'logout' %}">Logout</a>
 {% else %}
 	<h1>Log in</h1>
 	<form class="site-form" action="{% url 'index'%}"method="post">
 		{% csrf_token %}
 		{{form}}
 		<input type="submit" value="Login">
+        <a class="" href="{% url 'social:begin' 'google-oauth2' %}">
+            Login via Google!
+            </a>
 {% endif %}
 </body>
 </html
