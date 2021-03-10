@@ -1,0 +1,15 @@
+.idea
+.env
+.env.priv
+.env.local
+.vscode
+.DS_Store
+__pycache__
+.ipynb_checkpoints
+db.sqlite3
+*.old
+*--
+/media
+/bin/mainapp
+/bin/rs
+/bin/nb
