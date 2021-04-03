@@ -11,5 +11,6 @@ def index(request):
 	else:
 		form = AuthenticationForm()
 	return render(request, 'fakir/index.html', {'form': form})
+
 def manage(request):
     return render(request, 'fakir/manage.html')
