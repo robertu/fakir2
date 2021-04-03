@@ -14,8 +14,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+from fakir import views
+from django.contrib.auth.views import LogoutView
+from django.conf import settings
+
+
+
+app_name = 'fakir'
 
 urlpatterns = [
+	path('', views.index, name='index'),
+	path('', include('social_django.urls', namespace='social')),
     path('admin/', admin.site.urls),
+    path(
+    'logout/',
+    LogoutView.as_view(template_name=settings.LOGOUT_REDIRECT_URL),
+    name='logout'
+    ),
+	path('manage/', views.manage, name='manage'),
 ]
