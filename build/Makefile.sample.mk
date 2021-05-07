@@ -1,7 +1,7 @@
 DOMAIN=fakir.1kb.pl
 
-APPUSER=user
-APPGROUP=usergroup
+APPUSER=patryk
+APPGROUP=patryk
 APPPORT=8811
 
 # you can set the value of `geckodriver` to particular version number instead of latest one (for ex. 0.22.0)
