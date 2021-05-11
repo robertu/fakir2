@@ -1,69 +1,112 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.db.models.fields import DecimalField
+from decimal import Decimal
+from django.utils import timezone
+from django.db.models.signals import post_save, pre_save
 
-class Sprzedawca(models.Model):
-    imie = models.CharField(max_length=200)
-    nazwisko = models.CharField(max_length=200)
-    nazwa_firmy = models.CharField(max_length=200)
-    adres = models.CharField(max_length=200)
-    NIP = models.CharField(max_length=10, validators=[MinLengthValidator(10)])
-
+class Firma(models.Model):
+    nazwa = models.CharField(max_length=200)
+    adres = models.TextField()
+    taxid = models.CharField(max_length=20, null=True, blank=True)
+    is_sprzedawca = models.BooleanField(default=False)
+    is_nabywca = models.BooleanField(default=False)
     def __str__(self):
-        return self.imie + " " + self.nazwisko
-
+        return self.nazwa
     class Meta:
-        verbose_name = "Sprzedawca"
+        verbose_name = "Firma"
         verbose_name_plural = "Sprzedawcy"
 
-class Kupujacy(models.Model):
-    imie = models.CharField(max_length=200)
-    nazwisko = models.CharField(max_length=200)
-    nazwa_firmy = models.CharField(max_length=200, null=True)
-    NIP = models.CharField(max_length=10, validators=[MinLengthValidator(10)], null=True)
-    PESEL = models.CharField(max_length=11, validators=[MinLengthValidator(11)])
-    adres = models.CharField(max_length=200)
+
+class NumeracjaFaktur(models.Model):
+    nazwa = models.CharField(max_length=200, unique=True)
+    # uzywaj_r = models.BooleanField(default=False)
+    # uzywaj_m = models.BooleanField(default=False)
+    # uzywaj_d = models.BooleanField(default=False)
+    wzorzec = models.CharField(max_length=200, help_text="We wzorcu używaj znaczników: {r},{m},{d},{n} do wartości rok, miesiąc, dzień, numer")
 
     def __str__(self):
-        return self.imie + " " + self.nazwisko
+        return f"{self.nazwa} {self.wzorzec}"
 
-    class Meta:
-        verbose_name = "Kupujący"
-        verbose_name_plural = "Kupujący"
+
+    def get_licznik_from_date(self, date):
+
+        r = date.year if "{r}" in self.wzorzec else 0
+        m = date.month if "{m}" in self.wzorzec else 0
+        d = date.day if "{d}" in self.wzorzec else 0
+
+        l, created = LicznikFaktur.objects.get_or_create(numeracja=self, r=r, m=m, d=d)
+        return l
+
+    def get_current_licznik(self):
+        return self.get_licznik_from_date(timezone.now())
+
+    def numer(self, licznik=None, kolejny=False):
+        if licznik is None:
+            licznik = self.get_current_licznik()
+        if kolejny:
+            licznik.n +=1
+            licznik.save()
+        return self.wzorzec.format(n=licznik.n, r=licznik.r, m=licznik.m, d=licznik.d)
 
 class LicznikFaktur(models.Model):
-    nazwa = models.CharField(max_length=200, null=True)
-    podatek = models.IntegerField()
+    numeracja = models.ForeignKey(NumeracjaFaktur, on_delete=models.CASCADE, related_name="licznik_set")
+    r = models.PositiveBigIntegerField(default=0)
+    m = models.PositiveBigIntegerField(default=0)
+    d = models.PositiveBigIntegerField(default=0)
+    n = models.PositiveBigIntegerField(default=0)
+
+    @property
+    def numer(self):
+        return self.numeracja.numer(licznik=self)
 
     def __str__(self):
-        return self.nazwa
+        return self.numer
+
 
 class Faktura(models.Model):
-
-    nazwa = models.CharField(max_length=200, null=True)
-    kupujący = models.ForeignKey(Kupujacy, on_delete=models.CASCADE)
-    sprzedawca = models.ForeignKey(Sprzedawca, on_delete=models.CASCADE)
-    licznik = models.ForeignKey(LicznikFaktur, on_delete=models.CASCADE)
-    data_wystawienia = models.DateTimeField('Data wystawienia')
-
-
-    def __str__(self):
-        return self.nazwa
 
     class Meta:
         verbose_name = "Faktura"
         verbose_name_plural = "Faktury"
 
+    numer = models.CharField(max_length=200, null=True, blank=True,)
+    nabywca = models.ForeignKey(Firma, on_delete=models.SET_NULL, null=True, blank=True, related_name="nabywcy_set")
+    sprzedawca = models.ForeignKey(Firma, on_delete=models.SET_NULL, null=True, blank=True, related_name="sprzedawcy_set")
+    numeracja = models.ForeignKey(NumeracjaFaktur, on_delete=models.SET_NULL, null=True, blank=True)
+    data_sprzedazy = models.DateField('Data sprzedaży')
+    data_wystawienia = models.DateField('Data wystawienia')
+    is_oplacona = models.BooleanField(default=False)
+    is_kosztowa = models.BooleanField(default=False)
 
 
-class PozycjaFaktur(models.Model):
+    def __str__(self):
+        return self.numer
+
+
+
+class JednostaMiary(models.Model):
+    nazwa = models.CharField(max_length=20)
+
+class StawkaPodatku(models.Model):
+    nazwa = models.CharField(max_length=20, unique=True)
+    stawka = models.DecimalField(max_digits=5, decimal_places=2, default=0, unique=True)
+
+class PozycjaFaktury(models.Model):
     faktura = models.ForeignKey(Faktura, on_delete=models.CASCADE)
-    Nazwa_towaru_uslugi = models.CharField(max_length=200)
-    J_M_CHOICES = [
-        ("1", "Godzina"),
-        ("2", "Sztuka"),
-    ]
-    J_M = models.CharField("J.M", max_length=200, choices=J_M_CHOICES, default="2")
-    ilosc = models.IntegerField()
+    nazwa = models.CharField(max_length=200)
+    jm = models.ForeignKey(JednostaMiary, on_delete=models.SET_NULL, null=True, blank=True)
+    ilosc = models.DecimalField(max_digits=20, decimal_places=2, default=Decimal('1.0'))
     cena = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     wartosc_netto = models.DecimalField(max_digits=20, decimal_places=2, default=0)
-    wartosc_brutto = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    stawka_podatku = models.ForeignKey(StawkaPodatku, null=True, blank=True, on_delete=models.SET_NULL)
+
+
+
+def wyznacz_numer(sender, instance, **_kwargs):
+
+    instance.numer = instance.numeracja.numer(kolejny=True) if not instance.numer else instance.numeracja.numer()
+
+pre_save.connect(wyznacz_numer, sender=Faktura)
+
+
