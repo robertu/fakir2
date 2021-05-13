@@ -1,7 +1,8 @@
 DOMAIN=fakir.1kb.pl
 
-APPUSER=jakub
-APPGROUP=jakub
+# Użyj komendy id w terminalu by znaleźć swoje dane:
+APPUSER=your_username
+APPGROUP=your_grupname
 APPPORT=8811
 
 # you can set the value of `geckodriver` to particular version number instead of latest one (for ex. 0.22.0)
