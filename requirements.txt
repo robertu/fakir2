@@ -12,3 +12,4 @@ autopep8
 psycopg2
 social-auth-app-django
 pytest
+pytest-django

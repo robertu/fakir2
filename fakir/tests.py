@@ -1,9 +1,16 @@
 import pytest
-import django
-django.setup()
-from .models import NumeracjaFaktur, LicznikFaktur
+from fakir.models import NumeracjaFaktur, LicznikFaktur
 
-# Create your tests here.
+
+@pytest.mark.django_db
 def test_licznika():
-    nr = NumeracjaFaktur.objects.create(nazwa='test', wzorzec='{d}/{m}/{r}/{n}')
-    assert nr.numer() == '12/5/2021/0'
+    nr = NumeracjaFaktur.objects.create(nazwa='test', wzorzec='TEST/{d}/{m}/{r}/{n}')
+    assert nr.numer() == 'TEST/13/5/2021/0'
+
+@pytest.mark.django_db
+def test_licznika_kolejny():
+    nr = NumeracjaFaktur.objects.create(nazwa='test', wzorzec='FV/{d}/{m}/{r}/{n}')
+    for i in range(10):
+        n = nr.numer(kolejny=True)
+    assert n == 'FV/13/5/2021/10'
+
