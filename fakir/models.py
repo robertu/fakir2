@@ -1,4 +1,5 @@
 from django.db import models
+import datetime
 from django.core.validators import MinLengthValidator
 from django.db.models.fields import DecimalField
 from decimal import Decimal
@@ -107,6 +108,14 @@ def wyznacz_numer(sender, instance, **_kwargs):
 
     instance.numer = instance.numeracja.numer(kolejny=True) if not instance.numer else instance.numeracja.numer()
 
+def sprawdz_date_wystawienia_sprzedazy(sender, instance, **_kwargs):
+    sprzedaz = instance.data_sprzedazy
+    wystawienie = instance.data_wystawienia
+    if sprzedaz - datetime.timedelta(days=30) > wystawienie or wystawienie > datetime.datetime(sprzedaz.year, sprzedaz.month + 1, 15).date():
+        raise Exception('Blad')
+
+
 pre_save.connect(wyznacz_numer, sender=Faktura)
+pre_save.connect(sprawdz_date_wystawienia_sprzedazy, sender=Faktura)
 
 

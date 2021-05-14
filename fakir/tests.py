@@ -4,17 +4,17 @@ from django.utils import timezone
 from fakir.models import Firma, NumeracjaFaktur, LicznikFaktur, Faktura, JednostaMiary, StawkaPodatku, PozycjaFaktury
 
 @pytest.mark.django_db
-def test_licznika():
+def test_numerowania():
     date = timezone.now()
     nr = NumeracjaFaktur.objects.create(wzorzec='TEST/{d}/{m}/{r}/{n}')
     assert nr.numer() == nr.wzorzec.format(d=date.day, m=date.month, r=date.year, n=0)
 
 @pytest.mark.django_db
-def test_pozycji():
+def test_tworzenia_pozycji():
     date = timezone.now()
 
     nr = NumeracjaFaktur.objects.create(wzorzec='FV/{d}/{m}/{r}/{n}')
-    faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=date, data_wystawienia=date - datetime.timedelta(days=2))
+    faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=date.date(), data_wystawienia=(date - datetime.timedelta(days=2)).date())
 
     j_m = JednostaMiary.objects.create(nazwa='ilosc')
     st_podatku = StawkaPodatku.objects.create(nazwa='VAT', stawka=0.23)
@@ -25,10 +25,10 @@ def test_pozycji():
     assert pozycja.nazwa == 'Item10'
 
 @pytest.mark.django_db
-def test_faktury():
+def test_faktura_data_sprzedazy_data_wystawienia():
     date = timezone.now()
     nr = NumeracjaFaktur.objects.create(wzorzec='FV/{d}/{m}/{r}/{n}')
-    faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=date - datetime.timedelta(days=2), data_wystawienia=date)
+    faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=(date - datetime.timedelta(days=2)).date(), data_wystawienia=date.date())
     faktura.save()
     
     faktura2 = Faktura.objects.get(pk=faktura.pk)
@@ -54,7 +54,7 @@ def test_sprzedawcy():
     numer = NumeracjaFaktur.objects.create(nazwa="TestSprzedawcy", wzorzec="TestSprzedawcy")
     s = Firma.objects.create(nazwa="1s", is_sprzedawca=True, is_nabywca=True)
     n = Firma.objects.create(nazwa="1n", is_nabywca=True)
-    f = Faktura.objects.create(numeracja=numer, sprzedawca=s, nabywca=s, data_sprzedazy=datetime.date(1, 1, 1), data_wystawienia=datetime.date(1, 1, 1))
+    f = Faktura.objects.create(numeracja=numer, sprzedawca=s, nabywca=s, data_sprzedazy=timezone.now().date(), data_wystawienia=timezone.now().date())
 
     assert f.sprzedawca.is_sprzedawca == True, "nabywca nie może być sprzedawca"
     assert f.nabywca.is_nabywca == True, "sprzedawca nie może być nabywca"
