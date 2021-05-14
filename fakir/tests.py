@@ -3,7 +3,6 @@ import datetime
 from django.utils import timezone
 from fakir.models import Firma, NumeracjaFaktur, LicznikFaktur, Faktura, JednostaMiary, StawkaPodatku, PozycjaFaktury
 
-
 @pytest.mark.django_db
 def test_licznika():
     date = timezone.now()
@@ -26,12 +25,15 @@ def test_pozycji():
     assert pozycja.nazwa == 'Item10'
 
 @pytest.mark.django_db
-@pytest.mark.xfail
 def test_faktury():
     date = timezone.now()
     nr = NumeracjaFaktur.objects.create(wzorzec='FV/{d}/{m}/{r}/{n}')
     faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=date - datetime.timedelta(days=2), data_wystawienia=date)
-    assert faktura.data_sprzedazy > faktura.data_wystawienia
+    faktura.save()
+    
+    faktura2 = Faktura.objects.get(pk=faktura.pk)
+
+    assert faktura2.data_sprzedazy >= faktura2.data_wystawienia
 
 @pytest.mark.django_db
 def test_tworzenia_licznika():
