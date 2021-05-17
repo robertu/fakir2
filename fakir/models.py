@@ -1,5 +1,6 @@
 from django.db import models
 import datetime
+import calendar
 from django.core.validators import MinLengthValidator
 from django.db.models.fields import DecimalField
 from decimal import Decimal
@@ -102,7 +103,8 @@ class PozycjaFaktury(models.Model):
     wartosc_netto = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     stawka_podatku = models.ForeignKey(StawkaPodatku, null=True, blank=True, on_delete=models.SET_NULL)
 
-
+class FakturaException(Exception):
+    pass
 
 def wyznacz_numer(sender, instance, **_kwargs):
 
@@ -111,8 +113,14 @@ def wyznacz_numer(sender, instance, **_kwargs):
 def sprawdz_date_wystawienia_sprzedazy(sender, instance, **_kwargs):
     sprzedaz = instance.data_sprzedazy
     wystawienie = instance.data_wystawienia
-    if sprzedaz - datetime.timedelta(days=30) > wystawienie or wystawienie > datetime.datetime(sprzedaz.year, sprzedaz.month + 1, 15).date():
-        raise Exception('Blad')
+
+    dni_w_miesiacu = dni_w_miesiacu = calendar.monthrange(sprzedaz.year, sprzedaz.month)[1]
+    data_15_dni_nast_miesiaca = datetime.date(sprzedaz.year, sprzedaz.month, 15) + datetime.timedelta(days=dni_w_miesiacu)
+
+    if sprzedaz - datetime.timedelta(days=30) > wystawienie:
+        raise FakturaException('Data wystawienia nie moze byc wystawiona wczesniej niz 30 dni od daty sprzedazy')
+    elif wystawienie > data_15_dni_nast_miesiaca:
+        raise FakturaException('Data wystawienia nie moze być wystawiona dalej niz 15 dzien nastepnego miesiaca od daty sprzedazy')
 
 
 pre_save.connect(wyznacz_numer, sender=Faktura)
