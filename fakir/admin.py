@@ -7,6 +7,15 @@ class PozycjeInline(admin.TabularInline):
     extra = 3
 
 class FakturaAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None,               {'fields': ['numeracja']}),
+        ('Daty', {'fields': ['data_sprzedazy', 'data_wystawienia'], 'classes': ['collapse', 'open']}),
+        (None,  {'fields': ['nabywca']}),
+        ('Dane nabywcy', {'fields': ['nabywca_adres', 'nabywca_taxid'], 'classes': ['collapse', 'open']}),
+        (None, {'fields': ['sprzedawca']}),
+        ('Dane sprzedawcy', {'fields': ['sprzedawca_adres', 'sprzedawca_taxid'], 'classes': ['collapse', 'open']}),
+        (None, {'fields': ['is_oplacona', 'is_kosztowa']})
+    ]
     list_display = ('numer', 'nabywca', 'sprzedawca', 'data_wystawienia')
     list_filter = ['data_wystawienia']
     inlines = [PozycjeInline]

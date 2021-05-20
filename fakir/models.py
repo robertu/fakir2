@@ -73,8 +73,15 @@ class Faktura(models.Model):
         verbose_name_plural = "Faktury"
 
     numer = models.CharField(max_length=200, null=True, blank=True,)
+
     nabywca = models.ForeignKey(Firma, on_delete=models.SET_NULL, null=True, blank=True, related_name="nabywcy_set")
+    nabywca_adres = models.TextField(null=True, blank=True)
+    nabywca_taxid = models.CharField(max_length=20, null=True, blank=True)
+
     sprzedawca = models.ForeignKey(Firma, on_delete=models.SET_NULL, null=True, blank=True, related_name="sprzedawcy_set")
+    sprzedawca_adres = models.TextField(null=True, blank=True)
+    sprzedawca_taxid = models.CharField(max_length=20, null=True, blank=True)
+
     numeracja = models.ForeignKey(NumeracjaFaktur, on_delete=models.SET_NULL, null=True, blank=True)
     data_sprzedazy = models.DateField('Data sprzedaży')
     data_wystawienia = models.DateField('Data wystawienia')
@@ -114,7 +121,7 @@ def sprawdz_date_wystawienia_sprzedazy(sender, instance, **_kwargs):
     sprzedaz = instance.data_sprzedazy
     wystawienie = instance.data_wystawienia
 
-    dni_w_miesiacu = dni_w_miesiacu = calendar.monthrange(sprzedaz.year, sprzedaz.month)[1]
+    dni_w_miesiacu = calendar.monthrange(sprzedaz.year, sprzedaz.month)[1]
     data_15_dni_nast_miesiaca = datetime.date(sprzedaz.year, sprzedaz.month, 15) + datetime.timedelta(days=dni_w_miesiacu)
 
     if sprzedaz - datetime.timedelta(days=30) > wystawienie:
@@ -122,8 +129,18 @@ def sprawdz_date_wystawienia_sprzedazy(sender, instance, **_kwargs):
     elif wystawienie > data_15_dni_nast_miesiaca:
         raise FakturaException('Data wystawienia nie moze być wystawiona dalej niz 15 dzien nastepnego miesiaca od daty sprzedazy')
 
+def kopiuj_dane_z_firmy(sender, instance, **_kwargs):
+    nabywca = instance.nabywca
+    sprzedawca = instance.sprzedawca
+
+    if(nabywca and sprzedawca):
+        instance.nabywca_adres = nabywca.adres
+        instance.nabywca_taxid = nabywca.taxid
+
+        instance.sprzedawca_adres = sprzedawca.adres
+        instance.sprzedawca_taxid = sprzedawca.taxid
 
 pre_save.connect(wyznacz_numer, sender=Faktura)
 pre_save.connect(sprawdz_date_wystawienia_sprzedazy, sender=Faktura)
-
+pre_save.connect(kopiuj_dane_z_firmy, sender=Faktura)
 
