@@ -7,14 +7,17 @@ from decimal import Decimal
 from django.utils import timezone
 from django.db.models.signals import post_save, pre_save
 
+
 class Firma(models.Model):
     nazwa = models.CharField(max_length=200)
     adres = models.TextField()
     taxid = models.CharField(max_length=20, null=True, blank=True)
     is_sprzedawca = models.BooleanField(default=False)
     is_nabywca = models.BooleanField(default=False)
+
     def __str__(self):
         return self.nazwa
+
     class Meta:
         verbose_name = "Firma"
         verbose_name_plural = "Sprzedawcy"
@@ -29,7 +32,6 @@ class NumeracjaFaktur(models.Model):
 
     def __str__(self):
         return f"{self.nazwa} {self.wzorzec}"
-
 
     def get_licznik_from_date(self, date):
 
@@ -47,9 +49,10 @@ class NumeracjaFaktur(models.Model):
         if licznik is None:
             licznik = self.get_current_licznik()
         if kolejny:
-            licznik.n +=1
+            licznik.n += 1
             licznik.save()
         return self.wzorzec.format(n=licznik.n, r=licznik.r, m=licznik.m, d=licznik.d)
+
 
 class LicznikFaktur(models.Model):
     numeracja = models.ForeignKey(NumeracjaFaktur, on_delete=models.CASCADE, related_name="licznik_set")
@@ -88,18 +91,22 @@ class Faktura(models.Model):
     is_oplacona = models.BooleanField(default=False)
     is_kosztowa = models.BooleanField(default=False)
 
-
     def __str__(self):
         return self.numer
 
+
+class KontoBankowe(models.Model):
+    numer = models.CharField(max_length=26)
 
 
 class JednostaMiary(models.Model):
     nazwa = models.CharField(max_length=20)
 
+
 class StawkaPodatku(models.Model):
     nazwa = models.CharField(max_length=20, unique=True)
     stawka = models.DecimalField(max_digits=5, decimal_places=2, default=0, unique=True)
+
 
 class PozycjaFaktury(models.Model):
     faktura = models.ForeignKey(Faktura, on_delete=models.CASCADE)
@@ -110,12 +117,15 @@ class PozycjaFaktury(models.Model):
     wartosc_netto = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     stawka_podatku = models.ForeignKey(StawkaPodatku, null=True, blank=True, on_delete=models.SET_NULL)
 
+
 class FakturaException(Exception):
     pass
+
 
 def wyznacz_numer(sender, instance, **_kwargs):
 
     instance.numer = instance.numeracja.numer(kolejny=True) if not instance.numer else instance.numeracja.numer()
+
 
 def sprawdz_date_wystawienia_sprzedazy(sender, instance, **_kwargs):
     sprzedaz = instance.data_sprzedazy
@@ -129,6 +139,7 @@ def sprawdz_date_wystawienia_sprzedazy(sender, instance, **_kwargs):
     elif wystawienie > data_15_dni_nast_miesiaca:
         raise FakturaException('Data wystawienia nie moze być wystawiona dalej niz 15 dzien nastepnego miesiaca od daty sprzedazy')
 
+
 def kopiuj_dane_z_firmy(sender, instance, **_kwargs):
     nabywca = instance.nabywca
     sprzedawca = instance.sprzedawca
@@ -140,7 +151,7 @@ def kopiuj_dane_z_firmy(sender, instance, **_kwargs):
         instance.sprzedawca_adres = sprzedawca.adres
         instance.sprzedawca_taxid = sprzedawca.taxid
 
+
 pre_save.connect(wyznacz_numer, sender=Faktura)
 pre_save.connect(sprawdz_date_wystawienia_sprzedazy, sender=Faktura)
 pre_save.connect(kopiuj_dane_z_firmy, sender=Faktura)
-
