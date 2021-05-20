@@ -1,5 +1,6 @@
 import pytest
 import datetime
+import calendar
 from django.utils import timezone
 from fakir.models import Firma, NumeracjaFaktur, LicznikFaktur, Faktura, JednostaMiary, StawkaPodatku, PozycjaFaktury
 
@@ -25,15 +26,62 @@ def test_tworzenia_pozycji():
     assert pozycja.nazwa == 'Item10'
 
 @pytest.mark.django_db
-def test_faktura_data_sprzedazy_data_wystawienia():
-    date = timezone.now()
+def test_faktura_data_sprzedazy_data_wystawienia_rok_zwykly():
     nr = NumeracjaFaktur.objects.create(wzorzec='FV/{d}/{m}/{r}/{n}')
-    faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=(date - datetime.timedelta(days=2)).date(), data_wystawienia=date.date())
-    faktura.save()
-    
-    faktura2 = Faktura.objects.get(pk=faktura.pk)
+    data = datetime.date(2021, 12, 1)
 
-    assert faktura2.data_sprzedazy >= faktura2.data_wystawienia
+    for i in range(1, 13):
+        dni_w_miesiacu = calendar.monthrange(data.year, i)[1]
+        data_sprzedazy = datetime.date(data.year, i, dni_w_miesiacu)
+        data_wystawienia = datetime.date(data.year, i, 15) + datetime.timedelta(days=dni_w_miesiacu)
+
+        try:
+            faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=data_sprzedazy, data_wystawienia=data_wystawienia)
+            faktura.save()
+        except FakturaException:
+            assert False, 'Data wystawienia nie moze być wystawiona dalej niz 15 dzien nastepnego miesiaca od daty sprzedazy'
+
+    for i in range(1, 13):
+        dni_w_miesiacu = calendar.monthrange(data.year, i)[1]
+        data_sprzedazy = datetime.date(data.year, i, dni_w_miesiacu)
+        data_wystawienia = data_sprzedazy - datetime.timedelta(days=30)
+
+        try:
+            faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=data_sprzedazy, data_wystawienia=data_wystawienia)
+            faktura.save()
+        except FakturaException:
+            assert False, 'Data wystawienia nie moze byc wystawiona wczesniej niz 30 dni od daty sprzedazy'
+
+    assert True
+
+@pytest.mark.django_db
+def test_faktura_data_sprzedazy_data_wystawienia_rok_przestepny():
+    nr = NumeracjaFaktur.objects.create(wzorzec='FV/{d}/{m}/{r}/{n}')
+    data = datetime.date(2020, 12, 1)
+
+    for i in range(1, 13):
+        dni_w_miesiacu = calendar.monthrange(data.year, i)[1]
+        data_sprzedazy = datetime.date(data.year, i, dni_w_miesiacu)
+        data_wystawienia = datetime.date(data.year, i, 15) + datetime.timedelta(days=dni_w_miesiacu)
+
+        try:
+            faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=data_sprzedazy, data_wystawienia=data_wystawienia)
+            faktura.save()
+        except FakturaException:
+            assert False, 'Data wystawienia nie moze być wystawiona dalej niz 15 dzien nastepnego miesiaca od daty sprzedazy'
+
+    for i in range(1, 13):
+        dni_w_miesiacu = calendar.monthrange(data.year, i)[1]
+        data_sprzedazy = datetime.date(data.year, i, dni_w_miesiacu)
+        data_wystawienia = data_sprzedazy - datetime.timedelta(days=30)
+
+        try:
+            faktura = Faktura.objects.create(numeracja=nr, data_sprzedazy=data_sprzedazy, data_wystawienia=data_wystawienia)
+            faktura.save()
+        except FakturaException:
+            assert False, 'Data wystawienia nie moze byc wystawiona wczesniej niz 30 dni od daty sprzedazy'
+
+    assert True
 
 @pytest.mark.django_db
 def test_tworzenia_licznika():

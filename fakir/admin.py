@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Firma, Faktura, LicznikFaktur, PozycjaFaktury, NumeracjaFaktur
+from .models import Firma, Faktura, LicznikFaktur, PozycjaFaktury, NumeracjaFaktur, KontoBankowe
 
 
 class PozycjeInline(admin.TabularInline):
@@ -30,7 +30,7 @@ class PozycjaFakturyAdmin(admin.ModelAdmin):
     list_display = ('nazwa', 'faktura', 'stawka_podatku',)
 
 class FirmaAdmin(admin.ModelAdmin):
-    list_display = ('nazwa', 'taxid', )
+    list_display = ('nazwa', 'taxid',)
     list_filter = ('is_nabywca', 'is_sprzedawca')
     search_fields = ("nazwa", "taxid")
 
@@ -42,9 +42,13 @@ class NumeracjaFakturAdmin(admin.ModelAdmin):
     list_display = ('nazwa', 'wzorzec', 'numer' )
     search_fields = ("nazwa", "wzorzec")
 
+class KontoBankoweAdmin(admin.ModelAdmin):
+    list_display = ('numer', 'wlasciciel')
+
 
 admin.site.register(Faktura, FakturaAdmin)
 admin.site.register(Firma, FirmaAdmin)
 admin.site.register(LicznikFaktur, LicznikFakturAdmin)
 admin.site.register(NumeracjaFaktur, NumeracjaFakturAdmin)
 admin.site.register(PozycjaFaktury, PozycjaFakturyAdmin)
+admin.site.register(KontoBankowe, KontoBankoweAdmin)

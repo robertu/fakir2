@@ -14,6 +14,7 @@ class Firma(models.Model):
     taxid = models.CharField(max_length=20, null=True, blank=True)
     is_sprzedawca = models.BooleanField(default=False)
     is_nabywca = models.BooleanField(default=False)
+    domyslne_konto_bankowe = models.ManyToManyField('KontoBankowe', null=True, blank=True)
 
     def __str__(self):
         return self.nazwa
@@ -96,10 +97,10 @@ class Faktura(models.Model):
 
 
 class KontoBankowe(models.Model):
+    wlasciciel = models.ForeignKey(Firma, on_delete=models.CASCADE)
     numer = models.CharField(max_length=26)
     iban = models.CharField(max_length=28)
     swift = models.CharField(max_length=11)
-    # default = models.BooleanField(default=False)
 
 
 class JednostaMiary(models.Model):
