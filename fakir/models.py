@@ -97,6 +97,9 @@ class Faktura(models.Model):
 
 class KontoBankowe(models.Model):
     numer = models.CharField(max_length=26)
+    iban = models.CharField(max_length=28)
+    swift = models.CharField(max_length=11)
+    # default = models.BooleanField(default=False)
 
 
 class JednostaMiary(models.Model):

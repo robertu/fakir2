@@ -8,7 +8,7 @@ class PozycjeInline(admin.TabularInline):
 
 class FakturaAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,               {'fields': ['numeracja']}),
+        (None, {'fields': ['numeracja']}),
         ('Daty', {'fields': ['data_sprzedazy', 'data_wystawienia'], 'classes': ['collapse', 'open']}),
         (None,  {'fields': ['nabywca']}),
         ('Dane nabywcy', {'fields': ['nabywca_adres', 'nabywca_taxid'], 'classes': ['collapse', 'open']}),
