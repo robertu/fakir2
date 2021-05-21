@@ -1,0 +1,18 @@
+{% extends 'admin/change_form.html' %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+
+    {% if original.pk %}
+        <div class="submit-row">
+            <a href="{% url 'adminFakturaView' original.pk %}" style="background: var(--button-bg);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: var(--button-fg);
+            cursor: pointer;
+            text-decoration: none;">Zobacz fakture wraz z pozycjami</a>
+        </div>
+    {% endif %}
+    
+{% endblock %}

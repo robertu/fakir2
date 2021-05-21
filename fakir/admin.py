@@ -7,6 +7,8 @@ class PozycjeInline(admin.TabularInline):
     extra = 3
 
 class FakturaAdmin(admin.ModelAdmin):
+    change_form_template = "fakir/faktura_change_form.html"
+    
     fieldsets = [
         (None, {'fields': ['numeracja']}),
         ('Daty', {'fields': ['data_sprzedazy', 'data_wystawienia'], 'classes': ['collapse', 'open']}),

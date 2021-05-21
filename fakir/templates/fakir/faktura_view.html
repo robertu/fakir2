@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Faktura {{ faktura.numer }}</h1>
+    <h2>Data wystawienia: {{ faktura.data_wystawienia}} | Data sprzedazy: {{ faktura.data_sprzedazy }}</h2>
+    <ul>
+        {% for pozycja in pozycje.all %}
+            <li>{{ pozycja.nazwa }} | {{ pozycja.jm }} | {{ pozycja.ilosc }} | {{ pozycja.cena }} | {{ pozycja.wartosc_netto }} | {{ pozycja.stawka_podatku }}</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
